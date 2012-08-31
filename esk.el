@@ -88,7 +88,8 @@
   "Issues the find command to search matching the given `pattern'"
   (esk-show-results
    (esk-process-find-output
-    (shell-command-to-string (concat "find " dir " -path '*" pattern "*'")))))
+    (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
+      (shell-command-to-string (concat "find " dir " " param " '*" pattern "*'"))))))
 
 (provide 'esk)
 
