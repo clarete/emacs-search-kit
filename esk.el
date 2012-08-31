@@ -88,8 +88,7 @@
   "Issues the find command to search matching the given `pattern'"
   (esk-show-results
    (esk-process-find-output
-    (shell-command-to-string (concat "find " dir " -name '*" pattern "*'")))))
-
+    (shell-command-to-string (concat "find " dir " -path '*" pattern "*'")))))
 
 (provide 'esk)
 
