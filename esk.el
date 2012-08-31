@@ -36,7 +36,9 @@
   "Searches for a pattern"
   (interactive "sPattern to search: ")
   (esk-find-nearest-git-directory (esk-get-current-buffer-directory))
-  (esk-fire-command (esk-find-nearest-git-directory (esk-get-current-buffer-directory)) pattern))
+   (esk-perform-search
+    (esk-find-nearest-git-directory
+     (esk-get-current-buffer-directory)) pattern))
 
 
 (defun esk-find-top-dir (flag dir)
@@ -58,11 +60,35 @@
      (concat
       (mapconcat 'identity (butlast (split-string buffer-file-name "/") 1) "/")
       "/")))
-     
 
-(defun esk-fire-command (dir pattern)
+(defun esk-create-link-in-buffer (start fname end)
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-2] '(lambda () (interactove) (message-box "blah")))
+    (add-text-properties start end '(keymap map mouse-face highlight))))
+
+
+(defun esk-show-results (results)
+  (with-output-to-temp-buffer "*esk*"
+    (switch-to-buffer-other-window "*esk*")
+    (princ (format "Listing %d files found\n\n" (length results)))
+    (mapcar '(lambda (line)
+               (princ " * ")
+               (esk-create-link-in-buffer (point) (princ line) (point))
+               (princ "\n"))
+            results)))
+
+
+(defun esk-process-find-output (output)
+  (let ((all-lines (mapcar '(lambda (l) (split-string l "//")) (split-string output "\n"))))
+    (let ((lines (delq nil (mapcar '(lambda (l) (car (nthcdr 1 l))) all-lines))))
+      lines)))
+
+
+(defun esk-perform-search (dir pattern)
   "Issues the find command to search matching the given `pattern'"
-  (shell-command (concat "find " dir " -name '*" pattern "*'")))
+  (esk-show-results
+   (esk-process-find-output
+    (shell-command-to-string (concat "find " dir " -name '*" pattern "*'")))))
 
 
 (provide 'esk)
