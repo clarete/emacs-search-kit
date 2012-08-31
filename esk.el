@@ -35,10 +35,9 @@
 (defun esk-find-file (pattern)
   "Searches for a pattern"
   (interactive "sPattern to search: ")
-  (esk-find-nearest-git-directory (esk-get-current-buffer-directory))
-   (esk-perform-search
-    (esk-find-nearest-git-directory
-     (esk-get-current-buffer-directory)) pattern))
+  (esk-perform-search
+   (esk-find-nearest-git-directory
+    (esk-get-current-buffer-directory)) pattern))
 
 
 (defun esk-find-top-dir (flag dir)
