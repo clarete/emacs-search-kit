@@ -31,11 +31,13 @@
 
 
 
+;;; Interactive functions
+
 
 (defun esk-find-file (pattern)
   "Searches for a pattern"
   (interactive "sFind file in project: ")
-  (esk-perform-search
+  (esk-perform-find
    (esk-find-nearest-git-directory
     (esk-get-current-buffer-directory)) pattern))
 
@@ -43,23 +45,12 @@
 (defun esk-find-in-project (pattern)
   "Searches within the project for `pattern'"
   (interactive "sPattern to find in project: ")
-  (esk-perform-search-in-project
+  (esk-perform-grep
    (esk-find-nearest-git-directory
     (esk-get-current-buffer-directory)) pattern))
 
 
-(defun esk-perform-search-in-project (dir pattern)
-  (esk-show-results
-   (esk-process-find-output
-    (shell-command-to-string (concat "grep -nH -r -e " "'" pattern "' " dir)))))
-
-
-(defun esk-perform-search (dir pattern)
-  "Issues the find command to search matching the given `pattern'"
-  (esk-show-results
-   (esk-process-find-output
-    (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
-      (shell-command-to-string (concat "find " dir " " param " '*" pattern "*'"))))))
+;;; Generic functions for both grep and find
 
 
 (defun esk-find-nearest-git-directory (dir)
@@ -88,7 +79,18 @@
     (add-text-properties start end '(keymap map mouse-face highlight))))
 
 
-(defun esk-show-results (results)
+;;; Find related functions
+
+
+(defun esk-perform-find (dir pattern)
+  "Issues the find command to search matching the given `pattern'"
+  (esk-find-show-results
+   (esk-find-process-output
+    (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
+      (shell-command-to-string (concat "find " dir " " param " '*" pattern "*'"))))))
+
+
+(defun esk-find-show-results (results)
   (with-output-to-temp-buffer "*esk*"
     (switch-to-buffer-other-window "*esk*")
     (princ (format "Listing %d files found\n\n" (length results)))
@@ -99,10 +101,19 @@
             results)))
 
 
-(defun esk-process-find-output (output)
+(defun esk-find-process-output (output)
   (let ((all-lines (mapcar '(lambda (l) (split-string l "//")) (split-string output "\n"))))
     (let ((lines (delq nil (mapcar '(lambda (l) (car (nthcdr 1 l))) all-lines))))
       lines)))
+
+
+;;; Grep functions
+
+
+(defun esk-perform-grep (dir pattern)
+  (esk-show-results
+   (esk-process-find-output
+    (shell-command-to-string (concat "grep -nH -r -e " "'" pattern "' " dir)))))
 
 
 
