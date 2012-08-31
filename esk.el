@@ -34,10 +34,37 @@
 
 (defun esk-find-file (pattern)
   "Searches for a pattern"
-  (interactive "sPattern to search: ")
+  (interactive "sFind file in project: ")
   (esk-perform-search
    (esk-find-nearest-git-directory
     (esk-get-current-buffer-directory)) pattern))
+
+
+(defun esk-find-in-project (pattern)
+  "Searches within the project for `pattern'"
+  (interactive "sPattern to find in project: ")
+  (esk-perform-search-in-project
+   (esk-find-nearest-git-directory
+    (esk-get-current-buffer-directory)) pattern))
+
+
+(defun esk-perform-search-in-project (dir pattern)
+  (esk-show-results
+   (esk-process-find-output
+    (shell-command-to-string (concat "grep -nH -r -e " "'" pattern "' " dir)))))
+
+
+(defun esk-perform-search (dir pattern)
+  "Issues the find command to search matching the given `pattern'"
+  (esk-show-results
+   (esk-process-find-output
+    (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
+      (shell-command-to-string (concat "find " dir " " param " '*" pattern "*'"))))))
+
+
+(defun esk-find-nearest-git-directory (dir)
+  "Looks for the nearest directory containing a .git directory"
+  (esk-find-top-dir ".git" dir))
 
 
 (defun esk-find-top-dir (flag dir)
@@ -45,11 +72,6 @@
   (if (or (equal dir "/") (file-exists-p (concat dir flag)))
       dir
       (esk-find-top-dir flag (expand-file-name (concat dir "../")))))
-
-
-(defun esk-find-nearest-git-directory (dir)
-  "Looks for the nearest directory containing a .git directory"
-  (esk-find-top-dir ".git" dir))
 
 
 (defun esk-get-current-buffer-directory ()
@@ -83,12 +105,6 @@
       lines)))
 
 
-(defun esk-perform-search (dir pattern)
-  "Issues the find command to search matching the given `pattern'"
-  (esk-show-results
-   (esk-process-find-output
-    (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
-      (shell-command-to-string (concat "find " dir " " param " '*" pattern "*'"))))))
 
 (provide 'esk)
 
