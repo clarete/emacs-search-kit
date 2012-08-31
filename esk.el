@@ -84,13 +84,13 @@
 
 (defun esk-perform-find (dir pattern)
   "Issues the find command to search matching the given `pattern'"
-  (esk-find-show-results
-   (esk-find-process-output
+  (esk-show-find-results
+   (esk-process-find-output
     (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
       (shell-command-to-string (concat "find " dir " " param " '*" pattern "*'"))))))
 
 
-(defun esk-find-show-results (results)
+(defun esk-show-find-results (results)
   (with-output-to-temp-buffer "*esk*"
     (switch-to-buffer-other-window "*esk*")
     (princ (format "Listing %d files found\n\n" (length results)))
@@ -101,7 +101,7 @@
             results)))
 
 
-(defun esk-find-process-output (output)
+(defun esk-process-find-output (output)
   (let ((all-lines (mapcar '(lambda (l) (split-string l "//")) (split-string output "\n"))))
     (let ((lines (delq nil (mapcar '(lambda (l) (car (nthcdr 1 l))) all-lines))))
       lines)))
@@ -110,11 +110,31 @@
 ;;; Grep functions
 
 
-(defun esk-perform-grep (dir pattern)
-  (esk-show-results
-   (esk-process-find-output
-    (shell-command-to-string (concat "grep -nH -r -e " "'" pattern "' " dir)))))
+(defun esk-show-grep-results (results)
+  (with-output-to-temp-buffer "*esk*"
+    (switch-to-buffer-other-window "*esk*")
+    (setq font-lock-mode nil)
+    (princ (format "Listing %d results found\n\n" (length results)))
+    (mapcar '(lambda (line)
+               (insert
+                (format
+                 "%s:%s: %s"
+                 (propertize (car line) 'face '(:foreground "green"))
+                 (propertize (nth 1 line) 'face '(:foreground "yellow"))
+                 (nth 2 line)))
+               (princ "\n"))
+            results)))
 
+
+(defun esk-process-grep-output (output)
+  (butlast
+   (mapcar '(lambda (l) (split-string l ":")) (split-string output "\n"))))
+
+
+(defun esk-perform-grep (dir pattern)
+  (esk-show-grep-results
+   (esk-process-grep-output
+    (shell-command-to-string (concat "grep -nH -r -e '" pattern "' " dir)))))
 
 
 (provide 'esk)
