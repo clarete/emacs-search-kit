@@ -143,7 +143,7 @@
 (defun esk-perform-grep (dir pattern)
   (esk-show-grep-results
    (esk-process-grep-output
-    (shell-command-to-string (concat "grep -nH -r -e '" pattern "' " dir)))))
+    (shell-command-to-string (concat "grep -I -nH -r -e '" pattern "' " dir)))))
 
 
 (provide 'esk)
