@@ -73,10 +73,18 @@
       (mapconcat 'identity (butlast (split-string buffer-file-name "/") 1) "/")
       "/")))
 
+
+(defun esk-open-file (event)
+  (interactive "p")
+  (message-box (format "it works! %s" event)))
+
+
 (defun esk-create-link-in-buffer (start fname end)
   (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-2] '(lambda () (interactove) (message-box "blah")))
-    (add-text-properties start end '(keymap map mouse-face highlight))))
+    (define-key map (kbd "<RET>") 'esk-open-file)
+    (define-key map (kbd "<down-mouse-1>") 'esk-open-file)
+    (add-text-properties
+     start end `(keymap, map mouse-face highlight))))
 
 
 ;;; Find related functions
@@ -93,6 +101,7 @@
 (defun esk-show-find-results (results)
   (with-output-to-temp-buffer "*esk*"
     (switch-to-buffer-other-window "*esk*")
+    (setq font-lock-mode nil)
     (princ (format "Listing %d files found\n\n" (length results)))
     (mapcar '(lambda (line)
                (princ " * ")
