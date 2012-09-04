@@ -74,15 +74,14 @@
       "/")))
 
 
-(defun esk-open-file (event)
-  (interactive "p")
-  (message-box (format "it works! %s" event)))
-
 
 (defun esk-create-link-in-buffer (start fname end)
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<RET>") 'esk-open-file)
-    (define-key map (kbd "<down-mouse-1>") 'esk-open-file)
+  (lexical-let ((fname fname) (map (make-sparse-keymap)))
+    (defun esk-open-file (e)
+      (interactive "p")
+      (message-box (format "it works! %s" fname)))
+    (define-key map (kbd "<RET>") #'esk-open-file)
+    (define-key map (kbd "<down-mouse-1>") #'esk-open-file)
     (add-text-properties
      start end `(keymap, map mouse-face highlight))))
 
