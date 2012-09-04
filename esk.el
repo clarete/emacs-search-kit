@@ -110,10 +110,11 @@
 
 
 (defun esk-process-find-output (output)
-  (let ((all-lines (mapcar '(lambda (l) (split-string l "//")) (split-string output "\n"))))
-    (let ((lines (delq nil (mapcar '(lambda (l) (car (nthcdr 1 l))) all-lines))))
-      lines)))
+  (let ((lines (mapcar '(lambda (l) (split-string l "//")) (split-string output "\n"))))
+    (esk-flatten-and-filter-lines lines)))
 
+(defun esk-flatten-and-filter-lines (lines)
+  (remq "" (mapcar '(lambda (l) (car l)) lines)))
 
 ;;; Grep functions
 
