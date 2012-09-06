@@ -71,7 +71,7 @@
       (mapconcat 'identity (butlast (split-string buffer-file-name "/") 1) "/")
       "/")))
 
-(defun esk-clean-trailing-slash (s)
+(defun esk-clean-starting-slash (s)
   (or (and (string-match "^/" s) (substring s 1)) s))
 
 (defun esk-create-link-in-buffer (fname linenum)
@@ -102,7 +102,7 @@
 
 (defun esk-process-find-output (dir output)
   "Break the output in lines and filter them"
-  (mapcar '(lambda (s) (esk-clean-trailing-slash (substring s (length dir) (length s))))
+  (mapcar '(lambda (s) (esk-clean-starting-slash (substring s (length dir) (length s))))
           (remove "" (remove dir (split-string output "\n")))))
 
 (defun esk-show-find-results (results)
