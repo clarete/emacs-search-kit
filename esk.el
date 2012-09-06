@@ -74,15 +74,15 @@
 (defun esk-clean-starting-slash (s)
   (or (and (string-match "^/" s) (substring s 1)) s))
 
+(defun esk-open-file (fname linenum)
+  (find-file fname)
+  (goto-line (string-to-number linenum)))
+
 (defun esk-create-link-in-buffer (fname linenum)
   (lexical-let ((fname fname) (linenum linenum)
                 (map (make-sparse-keymap)))
-    (defun esk-open-file (e)
-      (interactive "p")
-      (find-file fname)
-      (goto-line (string-to-number linenum)))
-    (define-key map (kbd "<RET>") #'esk-open-file)
-    (define-key map (kbd "<down-mouse-1>") #'esk-open-file)
+    (define-key map (kbd "<RET>") #'(lambda (e) (interactive "p") (esk-open-file fname linenum)))
+    (define-key map (kbd "<down-mouse-1>") #'(lambda (e) (interactive "p") (esk-open-file fname linenum)))
     (insert
      (propertize
       fname
