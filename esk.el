@@ -34,13 +34,15 @@
 ;;; Interactive functions
 
 
+(defvar esk-find-binary "find"
+  "The path to the find binary to be used")
+
 (defun esk-find-file (pattern)
   "Searches for a pattern"
   (interactive "sFind file in project: ")
   (esk-perform-find
    (esk-find-nearest-git-directory
     (esk-get-current-buffer-directory)) pattern))
-
 
 (defun esk-find-in-project (pattern)
   "Searches within the project for `pattern'"
@@ -49,21 +51,17 @@
    (esk-find-nearest-git-directory
     (esk-get-current-buffer-directory)) pattern))
 
-
 ;;; Generic functions for both grep and find
-
 
 (defun esk-find-nearest-git-directory (dir)
   "Looks for the nearest directory containing a .git directory"
   (esk-find-top-dir ".git" dir))
-
 
 (defun esk-find-top-dir (flag dir)
   "Looks for a directory that contains a directory called `flag' and stops at `/'"
   (if (or (equal dir "/") (file-exists-p (concat dir flag)))
       dir
       (esk-find-top-dir flag (expand-file-name (concat dir "../")))))
-
 
 (defun esk-get-current-buffer-directory ()
   "Returns the directory of the current buffer"
@@ -72,8 +70,6 @@
      (concat
       (mapconcat 'identity (butlast (split-string buffer-file-name "/") 1) "/")
       "/")))
-
-
 
 (defun esk-create-link-in-buffer (start fname end)
   (lexical-let ((fname fname) (map (make-sparse-keymap)))
@@ -85,9 +81,7 @@
     (add-text-properties
      start end `(keymap, map mouse-face highlight))))
 
-
 ;;; Find related functions
-
 
 (defun esk-perform-find (dir pattern)
   "Issues the find command to search matching the given `pattern'"
@@ -95,14 +89,12 @@
    (esk-process-find-output
     dir
     (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
-      (shell-command-to-string (concat "find " dir " " param " '*" pattern "*'"))))))
-
+      (shell-command-to-string (concat esk-find-binary " " dir " " param " '*" pattern "*'"))))))
 
 (defun esk-process-find-output (dir output)
   "Break the output in lines and filter them"
   (mapcar '(lambda (s) (substring s (length dir) (length s)))
           (remove "" (remove dir (split-string output "\n")))))
-
 
 (defun esk-show-find-results (results)
   (with-output-to-temp-buffer "*esk*"
@@ -111,16 +103,13 @@
     (princ (format "Listing %d files found\n\n" (length results)))
     (mapcar 'esk-format-find-result-line results)))
 
-
 (defun esk-format-find-result-line (line)
   (princ " * ")
   (esk-create-link-in-buffer
    (point) (princ line) (point))
   (princ "\n"))
 
-
 ;;; Grep functions
-
 
 (defun esk-show-grep-results (results)
   (with-output-to-temp-buffer "*esk*"
@@ -137,17 +126,14 @@
                (princ "\n"))
             results)))
 
-
 (defun esk-process-grep-output (output)
   (butlast
    (mapcar '(lambda (l) (split-string l ":")) (split-string output "\n"))))
-
 
 (defun esk-perform-grep (dir pattern)
   (esk-show-grep-results
    (esk-process-grep-output
     (shell-command-to-string (concat "grep -I -nH -r -e '" pattern "' " dir)))))
-
 
 (provide 'esk)
 
