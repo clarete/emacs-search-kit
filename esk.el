@@ -98,7 +98,8 @@
    (esk-process-find-output
     dir
     (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
-      (shell-command-to-string (concat esk-find-binary " " dir " " param " '*" pattern "*'"))))))
+      (shell-command-to-string
+       (concat esk-find-binary " " dir " -type f " param " '*" pattern "*'"))))))
 
 (defun esk-process-find-output (dir output)
   "Break the output in lines and filter them"
