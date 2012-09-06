@@ -79,7 +79,7 @@
   (lexical-let ((fname fname) (map (make-sparse-keymap)))
     (defun esk-open-file (e)
       (interactive "p")
-      (message-box (format "it works! %s" fname)))
+      (find-file fname))
     (define-key map (kbd "<RET>") #'esk-open-file)
     (define-key map (kbd "<down-mouse-1>") #'esk-open-file)
     (add-text-properties
@@ -93,8 +93,15 @@
   "Issues the find command to search matching the given `pattern'"
   (esk-show-find-results
    (esk-process-find-output
+    dir
     (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
       (shell-command-to-string (concat "find " dir " " param " '*" pattern "*'"))))))
+
+
+(defun esk-process-find-output (dir output)
+  "Break the output in lines and filter them"
+  (mapcar '(lambda (s) (substring s (length dir) (length s)))
+          (remove "" (remove dir (split-string output "\n")))))
 
 
 (defun esk-show-find-results (results)
@@ -102,19 +109,15 @@
     (switch-to-buffer-other-window "*esk*")
     (setq font-lock-mode nil)
     (princ (format "Listing %d files found\n\n" (length results)))
-    (mapcar '(lambda (line)
-               (princ " * ")
-               (esk-create-link-in-buffer (point) (princ line) (point))
-               (princ "\n"))
-            results)))
+    (mapcar 'esk-format-find-result-line results)))
 
 
-(defun esk-process-find-output (output)
-  (let ((lines (mapcar '(lambda (l) (split-string l "//")) (split-string output "\n"))))
-    (esk-flatten-and-filter-lines lines)))
+(defun esk-format-find-result-line (line)
+  (princ " * ")
+  (esk-create-link-in-buffer
+   (point) (princ line) (point))
+  (princ "\n"))
 
-(defun esk-flatten-and-filter-lines (lines)
-  (remq "" (mapcar '(lambda (l) (car l)) lines)))
 
 ;;; Grep functions
 
