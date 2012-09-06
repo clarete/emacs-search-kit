@@ -74,15 +74,19 @@
 (defun esk-clean-starting-slash (s)
   (or (and (string-match "^/" s) (substring s 1)) s))
 
-(defun esk-open-file (fname linenum)
-  (find-file fname)
+(defun esk-open-file (dir fname linenum)
+  (find-file (concat dir "/" fname))
   (goto-line (string-to-number linenum)))
 
-(defun esk-create-link-in-buffer (fname linenum)
-  (lexical-let ((fname fname) (linenum linenum)
+(defun esk-create-link-in-buffer (dir fname linenum)
+  (lexical-let ((dir dir )
+                (fname fname)
+                (linenum linenum)
                 (map (make-sparse-keymap)))
-    (define-key map (kbd "<RET>") #'(lambda (e) (interactive "p") (esk-open-file fname linenum)))
-    (define-key map (kbd "<down-mouse-1>") #'(lambda (e) (interactive "p") (esk-open-file fname linenum)))
+    (define-key map (kbd "<RET>")
+      #'(lambda (e) (interactive "p") (esk-open-file dir fname linenum)))
+    (define-key map (kbd "<down-mouse-1>")
+      #'(lambda (e) (interactive "p") (esk-open-file dir fname linenum)))
     (insert
      (propertize
       fname
@@ -95,6 +99,7 @@
 (defun esk-perform-find (dir pattern)
   "Issues the find command to search matching the given `pattern'"
   (esk-show-find-results
+   dir
    (esk-process-find-output
     dir
     (let ((param (or (and (string-match "\/" pattern) "-path") "-name")))
@@ -106,27 +111,25 @@
   (mapcar '(lambda (s) (esk-clean-starting-slash (substring s (length dir) (length s))))
           (remove "" (remove dir (split-string output "\n")))))
 
-(defun esk-show-find-results (results)
+(defun esk-show-find-results (dir results)
   (with-output-to-temp-buffer "*esk*"
     (switch-to-buffer-other-window "*esk*")
     (setq font-lock-mode nil)
     (princ (format "Listing %d files found\n\n" (length results)))
-    (mapcar 'esk-format-find-result-line results)))
-
-(defun esk-format-find-result-line (line)
-  (princ " * ")
-  (esk-create-link-in-buffer line "0")
-  (princ "\n"))
+    (mapcar '(lambda (line)
+               (esk-create-link-in-buffer dir line "0")
+               (princ "\n"))
+            results)))
 
 ;;; Grep functions
 
-(defun esk-show-grep-results (results)
+(defun esk-show-grep-results (dir results)
   (with-output-to-temp-buffer "*esk*"
     (switch-to-buffer-other-window "*esk*")
     (setq font-lock-mode nil)
     (princ (format "Listing %d results found\n\n" (length results)))
     (mapcar '(lambda (line)
-               (esk-create-link-in-buffer (car line) (nth 1 line))
+               (esk-create-link-in-buffer dir (car line) (nth 1 line))
                (insert
                 (format
                  ":%s: %s"
@@ -140,6 +143,7 @@
 
 (defun esk-perform-grep (dir pattern)
   (esk-show-grep-results
+   dir
    (esk-process-grep-output
     dir
     (shell-command-to-string (concat "grep -I -nH -r -e '" pattern "' " dir)))))
