@@ -74,15 +74,21 @@
 (defun esk-clean-trailing-slash (s)
   (or (and (string-match "^/" s) (substring s 1)) s))
 
-(defun esk-create-link-in-buffer (start fname end)
-  (lexical-let ((fname fname) (map (make-sparse-keymap)))
+(defun esk-create-link-in-buffer (fname linenum)
+  (lexical-let ((fname fname) (linenum linenum)
+                (map (make-sparse-keymap)))
     (defun esk-open-file (e)
       (interactive "p")
-      (find-file fname))
+      (find-file fname)
+      (goto-line (string-to-number linenum)))
     (define-key map (kbd "<RET>") #'esk-open-file)
     (define-key map (kbd "<down-mouse-1>") #'esk-open-file)
-    (add-text-properties
-     start end `(keymap, map mouse-face highlight))))
+    (insert
+     (propertize
+      fname
+      'face '(:foreground "green")
+      'keymap map
+      'mouse-face 'highlight))))
 
 ;;; Find related functions
 
@@ -108,8 +114,7 @@
 
 (defun esk-format-find-result-line (line)
   (princ " * ")
-  (esk-create-link-in-buffer
-   (point) (princ line) (point))
+  (esk-create-link-in-buffer line "0")
   (princ "\n"))
 
 ;;; Grep functions
@@ -120,22 +125,22 @@
     (setq font-lock-mode nil)
     (princ (format "Listing %d results found\n\n" (length results)))
     (mapcar '(lambda (line)
+               (esk-create-link-in-buffer (car line) (nth 1 line))
                (insert
                 (format
-                 "%s:%s: %s"
-                 (propertize (car line) 'face '(:foreground "green"))
+                 ":%s: %s"
                  (propertize (nth 1 line) 'face '(:foreground "yellow"))
                  (nth 2 line)))
                (princ "\n"))
             results)))
 
-(defun esk-process-grep-output (output)
-  (butlast
-   (mapcar '(lambda (l) (split-string l ":")) (split-string output "\n"))))
+(defun esk-process-grep-output (dir output)
+  (mapcar '(lambda (l) (split-string l ":")) (esk-process-find-output dir output)))
 
 (defun esk-perform-grep (dir pattern)
   (esk-show-grep-results
    (esk-process-grep-output
+    dir
     (shell-command-to-string (concat "grep -I -nH -r -e '" pattern "' " dir)))))
 
 (provide 'esk)
