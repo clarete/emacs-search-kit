@@ -18,8 +18,16 @@ Now, edit your `.emacs` and add the following lines
 (require 'esk)
 ```
 
-Finally, you're ready to use it. Just do `M-x esk-find-file`
+Finally, you're ready to use it. Just do `M-x esk-find-file` or
+`M-x esk-find-in-project`.
 
+It's also a good idea to bind these functions to a keyboard
+shortcut. The following commands will do this job:
+
+```lisp
+(global-set-key "\M-s" 'esk-find-file)
+(global-set-key "\M-\S-s" 'esk-find-in-project)
+```
 
 ## License
 
