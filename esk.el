@@ -29,10 +29,7 @@
 
 ;;; Code:
 
-
-
 ;;; Interactive functions
-
 
 (defvar esk-find-binary "find"
   "The path to the find binary to be used")
@@ -57,10 +54,15 @@
   "Looks for the nearest directory containing a .git directory"
   (esk-find-top-dir ".git" dir))
 
+
 (defun esk-find-top-dir (flag dir)
-  "Looks for a directory that contains a directory called `flag' and stops at `/'"
+  "Decide in which directory the search will be performed
+
+Looks for a directory that contains a directory called `flag' and
+stops at `/'. But instead of returning `/', we actually return
+the directory of the current buffer"
   (if (or (equal dir "/") (file-exists-p (concat dir flag)))
-      dir
+      (esk-get-current-buffer-directory)
       (esk-find-top-dir flag (expand-file-name (concat dir "../")))))
 
 (defun esk-get-current-buffer-directory ()
